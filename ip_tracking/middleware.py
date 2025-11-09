@@ -1,5 +1,6 @@
-form django.utils import timezone
-from .models import RequestLog
+from django.http import HttpResponseForbidden
+from django.utils import timezone
+from .models import RequestLog, BlockedIP
 
 class RequestLoggingMiddleware:
     def __init__(self, get_response):
@@ -13,6 +14,11 @@ class RequestLoggingMiddleware:
 
         else:
             ip = request.META.get('REMOTE_ADDR')
+
+        # Block if IP in blacklist
+
+        if BlockedIP.objects.filter(ip_address=ip).exists():
+            return HttpResponseForbidden("Access Denied")
 
 
         RequestLog.objects.create(
